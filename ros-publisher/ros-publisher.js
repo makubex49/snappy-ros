@@ -27,13 +27,20 @@ module.exports = function(RED) {
     })
 
     node.on('input', function(msg) {
-      var msgType = rosnodejs.require(config.typepackage)
-        .msg[config.typename]
-
-      var x = new msgType()
-      x.data = msg.payload
-
-      node.pub.publish(x)
+        var msgType = rosnodejs.require(config.typepackage).msg[config.typename]
+        var x = new msgType();
+      
+        if( x.data && Array.isArray(msg.payload) || Object.keys(msg.payload).length == 0){
+            x.data = msg.payload;
+        }
+        else{
+            for (var key in x){
+                if (msg.payload.hasOwnProperty(key)){
+                   x[key] = msg.payload[key];
+                }
+            }
+        }
+        node.pub.publish(x)
     })
 
     node.on('close', function(done) {
